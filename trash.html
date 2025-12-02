@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Trash to Cash</title>
+
+  <!-- Simple icon for home-screen (data URI) -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2322c55e'/><text x='50' y='58' font-size='40' text-anchor='middle' fill='white' font-family='Arial'>♻️</text></svg>">
+
+  <style>
+    :root{
+      --bg:#f3f4f6; --card:#fff; --muted:#6b7280; --accent:#22c55e; --glass:#eef2ff;
+    }
+    *{box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial;}
+    html,body{height:100%;margin:0;background:var(--bg);-webkit-font-smoothing:antialiased;}
+    .wrap{max-width:520px;margin:14px auto;padding:12px;}
+    .card{background:var(--card);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 6px 18px rgba(0,0,0,0.06);}
+    h1{margin:0;font-size:1.4rem;text-align:center;}
+    .subtitle{color:var(--muted);font-size:0.9rem;text-align:center;margin-top:6px;}
+    .rates{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:8px;}
+    .pill{background:var(--glass);padding:5px 9px;border-radius:999px;font-weight:600;font-size:0.85rem;}
+    label{display:block;color:#374151;margin-top:8px;margin-bottom:6px;font-weight:600;}
+    select,input{width:100%;padding:10px;border-radius:10px;border:1px solid #e5e7eb;font-size:1rem;}
+    input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+    .row{display:flex;gap:8px;}
+    button{width:100%;padding:11px;border-radius:999px;border:none;background:var(--accent);color:white;font-weight:700;font-size:1rem;cursor:pointer;margin-top:10px;}
+    table{width:100%;border-collapse:collapse;font-size:0.92rem;margin-top:6px;}
+    th,td{text-align:left;padding:8px 6px}
+    th{color:#4b5563;border-bottom:1px solid #eef2ff}
+    tr:nth-child(even){background:#f9fafb}
+    .summary{display:flex;justify-content:space-between;padding-top:6px;color:var(--muted);font-weight:700}
+    .small{font-size:0.85rem;color:var(--muted)}
+    .message{margin-top:8px;font-size:0.9rem}
+    .message.error{color:#dc2626}
+    .message.success{color:#16a34a}
+    .controls{display:flex;gap:8px;margin-top:6px}
+    .btn-secondary{background:#eef2ff;color:#1f2937;font-weight:700;border-radius:10px;padding:8px 10px;border:none;cursor:pointer}
+    .badge{background:#e5e7eb;padding:4px 8px;border-radius:999px;font-size:0.8rem}
+    .btn-delete{background:transparent;border:none;color:#dc2626;font-weight:700;cursor:pointer;border-radius:8px;padding:6px}
+    footer{font-size:0.78rem;color:var(--muted);text-align:center;margin-top:8px}
+    @media(min-width:560px){ .wrap{margin-top:28px} }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card" aria-hidden="false">
+      <h1>Trash to Cash</h1>
+      <div class="subtitle">Turn scrap weight into money 💰 — save & track your collections</div>
+      <div class="rates" aria-hidden="true">
+        <div class="pill">Plastic – ₹10/kg</div>
+        <div class="pill">Paper – ₹8/kg</div>
+        <div class="pill">Metal – ₹25/kg</div>
+        <div class="pill">Glass – ₹5/kg</div>
+        <div class="pill">E-waste – ₹40/kg</div>
+      </div>
+    </div>
+
+    <div class="card" role="region" aria-label="Add trash entry">
+      <label for="type">Trash Type</label>
+      <select id="type" aria-describedby="typeHelp">
+        <option value="plastic">Plastic</option>
+        <option value="paper">Paper</option>
+        <option value="metal">Metal</option>
+        <option value="glass">Glass</option>
+        <option value="ewaste">E-waste</option>
+      </select>
+
+      <label for="weight">Weight (kg)</label>
+      <input id="weight" type="number" inputmode="decimal" min="0" step="0.1" placeholder="e.g. 2.5">
+
+      <div class="controls">
+        <button id="addBtn">Add Trash</button>
+        <button id="clearBtn" class="btn-secondary" title="Clear all saved entries">Clear All</button>
+      </div>
+
+      <div id="message" class="message" role="status" aria-live="polite"></div>
+    </div>
+
+    <div class="card" role="region" aria-label="Records">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <strong>Entries</strong>
+        <span class="badge" id="countBadge">0 items</span>
+      </div>
+
+      <div style="max-height:260px;overflow:auto;margin-top:8px">
+        <table aria-live="polite" id="recordsTable">
+          <thead>
+            <tr><th>#</th><th>Type</th><th>Weight (kg)</th><th>Amount (₹)</th><th></th></tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="summary" style="margin-top:8px">
+        <span class="small">Total Weight</span><span id="totalWeight">0.00 kg</span>
+      </div>
+      <div class="summary">
+        <span class="small">Total Cash</span><span id="totalCash">₹0.00</span>
+      </div>
+    </div>
+
+    <footer>Tip: Add this page to Home screen (Chrome → ⋮ → Add to Home screen)</footer>
+  </div>
+
+  <script>
+    // Rates (editable)
+    const RATES = { plastic:10, paper:8, metal:25, glass:5, ewaste:40 };
+
+    // DOM
+    const typeEl = document.getElementById('type');
+    const weightEl = document.getElementById('weight');
+    const addBtn = document.getElementById('addBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const messageEl = document.getElementById('message');
+    const tbody = document.getElementById('tbody');
+    const totalWeightEl = document.getElementById('totalWeight');
+    const totalCashEl = document.getElementById('totalCash');
+    const countBadge = document.getElementById('countBadge');
+
+    // Storage key
+    const STORAGE_KEY = 'trash_to_cash_v1';
+
+    // Load existing entries (or empty array)
+    let records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+    // Utility: format number to 2 decimals
+    const fmt = num => Number(num).toFixed(2);
+
+    // Show temporary message
+    function showMessage(text, type = 'success') {
+      messageEl.textContent = text;
+      messageEl.className = 'message ' + (type === 'error' ? 'error' : 'success');
+      if (text) setTimeout(()=>{ messageEl.textContent=''; messageEl.className='message'; }, 2200);
+    }
+
+    // Save to localStorage
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    }
+
+    // Render table & summary
+    function render() {
+      tbody.innerHTML = '';
+      let totalW = 0, totalCash = 0;
+      records.forEach((r, i) => {
+        const tr = document.createElement('tr');
+
+        const tdIndex = document.createElement('td'); tdIndex.textContent = i+1;
+        const tdType = document.createElement('td'); tdType.textContent = r.typeLabel;
+        const tdWeight = document.createElement('td'); tdWeight.textContent = fmt(r.weight);
+        const tdAmount = document.createElement('td'); tdAmount.textContent = '₹' + fmt(r.amount);
+        const tdDel = document.createElement('td');
+        const delBtn = document.createElement('button');
+        delBtn.className = 'btn-delete';
+        delBtn.textContent = 'Delete';
+        delBtn.title = 'Delete this entry';
+        delBtn.addEventListener('click', () => {
+          if (!confirm('Delete this entry?')) return;
+          records.splice(i, 1);
+          save();
+          render();
+          showMessage('Entry deleted.', 'success');
+        });
+        tdDel.appendChild(delBtn);
+
+        tr.append(tdIndex, tdType, tdWeight, tdAmount, tdDel);
+        tbody.appendChild(tr);
+
+        totalW += r.weight;
+        totalCash += r.amount;
+      });
+
+      totalWeightEl.textContent = fmt(totalW) + ' kg';
+      totalCashEl.textContent = '₹' + fmt(totalCash);
+      countBadge.textContent = records.length + (records.length===1 ? ' item' : ' items');
+    }
+
+    // Add entry
+    addBtn.addEventListener('click', () => {
+      const type = typeEl.value;
+      const typeLabel = typeEl.options[typeEl.selectedIndex].text;
+      const weight = parseFloat(weightEl.value);
+
+      if (isNaN(weight) || weight <= 0) {
+        showMessage('Please enter a valid weight greater than 0.', 'error');
+        return;
+      }
+      const rate = RATES[type] ?? 0;
+      const amount = rate * weight;
+
+      const rec = { type, typeLabel, weight: Number(fmt(weight)), amount: Number(fmt(amount)), addedAt: new Date().toISOString() };
+      records.push(rec);
+      save();
+      render();
+
+      showMessage(`Added ${fmt(weight)} kg ${typeLabel} — Earn: ₹${fmt(amount)}`);
+      weightEl.value = '';
+      weightEl.focus();
+    });
+
+    // Clear all entries
+    clearBtn.addEventListener('click', () => {
+      if (!confirm('Clear all saved entries? This cannot be undone.')) return;
+      records = [];
+      save();
+      render();
+      showMessage('All entries cleared.', 'success');
+    });
+
+    // initialize
+    render();
+
+    // Optional: allow pressing Enter in weight input to add quickly
+    weightEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') addBtn.click();
+    });
+  </script>
+</body>
+</html>
